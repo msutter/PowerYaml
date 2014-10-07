@@ -10,6 +10,6 @@ function Shadow-Copy($file, $shadowPath = "$($env:TEMP)\poweryaml\shadow") {
         "Attempted to write over locked file, continuing..." | Write-Debug
     }
 
-    $fileName = (Get-Item $file).Name
-    "$shadowPath\$fileName"
+    $fileName = $(Get-Item $file).Name
+    return $(Join-Path $shadowPath $fileName)
 }

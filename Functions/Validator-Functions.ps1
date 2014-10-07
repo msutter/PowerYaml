@@ -1,15 +1,13 @@
 function Validate-File([string] $file) {
-    $file_exists = Test-Path $file
-    if (-not $file_exists) {
-        "ERROR: '$file' does not exist" | Write-Error
-        return $false 
+    if (-not $(Test-Path $file)) {
+        Write-Error "ERROR: '$file' does not exist"
+        return $false
     }
 
-    $lines_in_file = [System.IO.File]::ReadAllLines($file)
-    $line_tab_detected = Detect-Tab $lines_in_file
+    $lines_in_file = Get-Content $file
 
-    if ($line_tab_detected -gt 0) {
-        "ERROR in '$file'`nTAB detected on line $line_tab_detected" | Write-Error 
+    if (Detect-Tab $lines_in_file -gt 0) {
+        Write-Error "ERROR in '$file'`nTAB detected on line $line_tab_detected"
         return $false
     }
 
