@@ -11,7 +11,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
   </metadata>
   <files>
-    <file src="tools" target="tools" />
+    <file src="tools\**" target="tools" />
     <file src="PowerYaml.psm1" target="files" />
     <file src="Functions\**\*.*" target="files\Functions" />
     <file src="Libs\*.dll" target="files\Libs" />
