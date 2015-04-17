@@ -3,7 +3,6 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests", "")
 . "$pwd\$sut"
 
 Describe "Detect-Tab" {
-
     It "should return the line number the first TAB character is found on" {
         $lines = @()
         $lines += "valide: yaml"
@@ -21,29 +20,47 @@ Describe "Detect-Tab" {
 }
 
 Describe "Validate-File" {
+    Mock Write-Error { return }
 
-    Setup -File "exists.yml"
-
-    It "should return false if a file does not exist" {
+    Context "file does not exist" {
         $result = Validate-File "some non existent file"
-        $result | Should Be $false
-    }
 
-    It "should return true for a file that does exist and does not contain a TAB character" {
-        $result = Validate-File "$TestDrive\exists.yml" 
-        $result | Should Be $true
-    }
-}
-
-Describe "Validating a file with tabs" {
-
-    Setup -File "bad.yml" "     `t   "
-
-    It "should return false" {
-        Trap [Exception] {
-            Write-Host caught error
+        It "should throw if a file does not exist" {
+            $result | Should be $false
         }
-        $result = Validate-File "$TestDrive\bad.yml"
-        $result | Should Be $false
+    }
+
+    Context "file does exist and does not contain a tab" {
+        Set-Content "TestDrive:\exists.yml" -value ""
+        Mock Detect-Tab { return $false }
+
+        $result = Validate-File "TestDrive:\exists.yml"
+
+        It "should return true for a file that does exist and does not contain a TAB character" {
+            $result | Should Be $true
+        }
+
+        It "should call Detect-Tab once" {
+            Assert-MockCalled Detect-Tab 1
+        }
+    }
+
+    Context "file does exist and contains a tab" {
+        Set-Content "TestDrive:\bad.yml" -value "     `t   "
+        Mock Detect-Tab { return $true }
+
+        $result = Validate-File "TestDrive:\bad.yml"
+
+        It "should return false" {
+            $result | Should Be $false
+        }
+
+        It "should call Write-Error once" {
+            Assert-MockCalled Write-Error 1
+        }
+
+        It "should call Detect-Tab once" {
+            Assert-MockCalled Detect-Tab 1
+        }
     }
 }

@@ -1,23 +1,12 @@
 function Load-YamlDotNetLibraries([string] $dllPath, $shadowPath = "$($env:TEMP)\poweryaml\shadow") {
-    gci $dllPath | % {
+    Get-ChildItem $dllPath | ForEach-Object {
         $shadow = Shadow-Copy -File $_.FullName -ShadowPath $shadowPath
-        [Reflection.Assembly]::LoadFrom($shadow)
+        Add-Type -Path $_.FullName
     } | Out-Null
 }
 
-function Get-YamlStream([string] $file) {
-    $streamReader = [System.IO.File]::OpenText($file)
-    $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
-
-    $yamlStream.Load([System.IO.TextReader] $streamReader)
-    $streamReader.Close()
-    return $yamlStream
-}
-
-function Get-YamlDocument([string] $file) {
-    $yamlStream = Get-YamlStream $file
-    $document = $yamlStream.Documents[0]
-    return $document
+function Read-TextFile([string] $file) {
+    return $(Get-Content $file) -join "`n"
 }
 
 function Get-YamlDocumentFromString([string] $yamlString) {
@@ -30,12 +19,14 @@ function Get-YamlDocumentFromString([string] $yamlString) {
 }
 
 function Explode-Node($node) {
-    if ($node.GetType().Name -eq "YamlScalarNode") {
-        return Convert-YamlScalarNodeToValue $node 
-    } elseif ($node.GetType().Name -eq "YamlMappingNode") {
-        return Convert-YamlMappingNodeToHash $node
-    } elseif ($node.GetType().Name -eq "YamlSequenceNode") {
-        return Convert-YamlSequenceNodeToList $node
+    if ($node -ne $null) {
+        if ($node.GetType().Name -eq "YamlScalarNode") {
+            return Convert-YamlScalarNodeToValue $node
+        } elseif ($node.GetType().Name -eq "YamlMappingNode") {
+            return Convert-YamlMappingNodeToHash $node
+        } elseif ($node.GetType().Name -eq "YamlSequenceNode") {
+            return Convert-YamlSequenceNodeToList $node
+        }
     }
 }
 
